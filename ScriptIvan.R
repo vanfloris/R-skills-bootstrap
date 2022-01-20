@@ -59,9 +59,9 @@ v <- ols.lm2$residuals
 
 for(i in  1:length(u[,1])){
   sigma.uu <- 1/length(u[,1]) * u[i,]%*%t(u[i,])
-  sigma.vv <- 1/length(v[,1]) * v[i,]%*%t(v[i,])
-  sigma.uv <- 1/length(v[,1]) * u[i,]%*%t(v[i,])
-  sigma.vu <- 1/length(v[,1]) * v[i,]%*%t(u[i,])
+  # sigma.vv <- 1/length(u[,1]) * v[i,]%*%t(v[i,])
+  # sigma.uv <- 1/length(u[,1]) * u[i,]%*%t(v[i,])
+  # sigma.vu <- 1/length(u[,1]) * v[i,]%*%t(u[i,])
 }
 Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 
