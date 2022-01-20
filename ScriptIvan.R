@@ -92,7 +92,7 @@ for (j in 1:nr.sim){
   ## Step 3: Evaluate ##
   # Check if null hypothesis is rejected
   if (teststats[1] > 48.28) {reject.0[j] <- 1}
-  if (teststats[2] > 31.52) {reject.1[j] <- 1}
+  if (teststats[2] > 38.8) {reject.1[j] <- 1}
 }
 
 ## Step 4: Summarize ##
@@ -103,7 +103,7 @@ ERF.1 <- mean(reject.1)
 # give the output on the screen
 print(paste("Chance to reject 0: ", ERF.0))
 print(paste("Chance to reject 1: ", ERF.1))
-
+ts.plot(X)
 
 ############# Estimated VAR based on simul  ############# 
 # lag selection
@@ -138,7 +138,7 @@ lag2coef <- rbind(t(as.matrix(sum$varresult$V1$coefficients[5:8,1])),t(as.matrix
 const <- rbind((as.matrix(sum$varresult$V1$coefficients[9,1])),(as.matrix(sum$varresult$V2$coefficients[9,1])),
                (as.matrix(sum$varresult$V3$coefficients[9,1])), (as.matrix(sum$varresult$V1$coefficients[9,1])))
 
-# Test if we can resample from estimated serie 
+# Test if we can resample from estimated series 
 estseries <- matrix(0, k, t + 2*p) # Raw series with zeros
 J <- sample.int(n, size = n, replace = TRUE) # Draw J
 for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
@@ -152,7 +152,7 @@ ts.plot(X.star)
 n = 52
 #J <- ceiling(runif(n, min = 0, max = n))
 # we do B bootstrap replications and store the quantities in a vector
-B = 399
+B = 299
 Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
 reject.bstar.0 <- rep(0, times = B)
 reject.bstar.1 <- rep(0, times = B)
@@ -180,8 +180,8 @@ for (b in 1:B) {
   S.star <- summary(ca.star2)
   teststats.star <- rev(S.star@teststat) #stored as teststat
   Q.star1[b,] <- teststats.star
-  if (teststats.star[2] > 48.28) {reject.bstar.0[b] <- 1}
-  if (teststats.star[3] > 31.52) {reject.bstar.1[b] <- 1}
+  # if (teststats.star[2] > 48.28) {reject.bstar.0[b] <- 1}
+  # if (teststats.star[3] > 31.52) {reject.bstar.1[b] <- 1}
 }
 
 
@@ -267,4 +267,5 @@ print(paste("Rejection occurred in ", 100 *ERF.1, "% of the cases."))
 #    return(c.rank <- i-1) 
 #  }
 #}
+
 
