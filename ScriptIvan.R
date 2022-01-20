@@ -159,18 +159,35 @@ reject.bstar.1 <- rep(0, times = B)
 for (b in 1:B) {
   J <- sample.int(n, size = n, replace = TRUE) # Draw J
   estseries1 <- matrix(0, k, t + 2*p) # Raw series with zeros
-  for (i in (p + 1):(t + 2*p)){ # Generate series with recentered residuals
+  
+  for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
     estseries1[, i] <- lag1coef%*%estseries1[, i-1] + lag2coef%*%estseries1[, i-2] + const + recenter.resids[J[i],]
   }
   X.star <- t(estseries1)
   colnames(X.star) <- names
-  ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
-  S.star <- summary(ca.star)
+  ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "none")
+  
+  rpar <- vec2var(ca.star, r = 1)
+  
+  estseries2 <- matrix(0, k, t + 2*p) # Raw series with zeros
+  for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
+    estseries2[, i] <- rpar$A$A1%*%estseries2[, i-1] + rpar$A$A2%*%estseries2[, i-2] + const + recenter.resids[J[i],]
+  }
+  X.Star2 <- t(estseries2)
+  colnames(X.Star2) <- names
+  ca.star2 <- ca.jo(X.Star2, type = "trace", K=2, ecdet = "none")
+  
+  S.star <- summary(ca.star2)
   teststats.star <- rev(S.star@teststat) #stored as teststat
   Q.star1[b,] <- teststats.star
-  #if (teststats.star[1] > 48.28) {reject.bstar.0[b] <- 1}
-  #if (teststats.star[2] > 31.52) {reject.bstar.1[b] <- 1}
+  if (teststats.star[2] > 48.28) {reject.bstar.0[b] <- 1}
+  if (teststats.star[3] > 31.52) {reject.bstar.1[b] <- 1}
 }
+
+
+
+
+
 
 cv.star1 <- quantile(Q.star1[,1], probs=0.95) ## Crit value for r = 0
 cv.star2 <- quantile(Q.star1[,2], probs=0.95) ## Crit value for r = 1
