@@ -201,36 +201,3 @@ ERF.0 <- mean(reject.star.0)
 ERF.1 <- mean(reject.star.1)
 print(paste("Rejection occurred in ", 100 *ERF.0, "% of the cases."))
 print(paste("Rejection occurred in ", 100 *ERF.1, "% of the cases."))  
-
-
-### NOTES ###
-
-# Check eigenvalues
-#eigen(A.1)
-#eigen(A.2)
-#eigen(A) # Unstable eigenvalues
-#eigen(B) # 1 eigenvalue is equal to 1
-
-
-# Generate series
-#series <- matrix(0, k, t + 2*p) # Raw series with zeros
-#for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
-#  series[, i] <- A%*%series[, i-1] - B%*%series[, i-2] + rnorm(k, 0, 1)
-#}
-#seriests <- ts(t(series[, -(1:p)])) # Convert to time series format
-#ts.plot(seriests)
-#transseries <- t(series)
-#names <- c("V1", "V2", "V3", "V4") # Rename variables
-#colnames(transseries) <- names
-
-#ca <- ca.jo(transseries, type = "trace", K = 2, ecdet = "none")
-#S <- summary(ca)
-#cv <- c(48.28, 31.52, 17.95, 8.18)
-#teststats <- rev(S@teststat)
-#for(i in 1:4){
-#  if(teststats[i]< cv[i]){
-#    return(c.rank <- i-1) 
-#  }
-#}
-
-
