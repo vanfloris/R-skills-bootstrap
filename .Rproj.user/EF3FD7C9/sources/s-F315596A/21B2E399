@@ -3,7 +3,7 @@
     "path": "~/GitHub/R-skills-bootstrap/Script Michiel.R",
     "project_path": "Script Michiel.R",
     "type": "r_source",
-    "hash": "112745122",
+    "hash": "3139881624",
     "contents": "",
     "dirty": false,
     "created": 1642690679173.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "203,0",
-        "scrollLine": "181"
+        "cursorPosition": "56,60",
+        "scrollLine": "46"
     },
     "folds": "",
-    "lastKnownWriteTime": 1642690972,
+    "lastKnownWriteTime": 1642694811,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1642690972196,
+    "last_content_update": 1642694812002,
     "read_only": false,
     "read_only_alternatives": []
 }

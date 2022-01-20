@@ -56,7 +56,6 @@ for(i in  1:length(u[,1])){
 }
 Sigma <- inv(sigma.vv)%*%sigma.vu%*%inv(sigma.uu)%*%sigma.uv
 
-
 ###### Monte Carlo Simulation ######
 # Number of simulations
 nr.sim <- 10000
