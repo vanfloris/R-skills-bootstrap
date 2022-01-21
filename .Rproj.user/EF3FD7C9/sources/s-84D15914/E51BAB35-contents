@@ -1,4 +1,4 @@
-####### Initialise the variables #######
+####### Initialize the variables #######
 # We look to simulate a VAR(2) with k = 4 equations
 rm(list=ls())
 set.seed(123) # Reset random number generator for reasons of reproducability
@@ -57,14 +57,17 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 
 ## Eigenvalues of the Sigma
 eigensigma <- eigen(Sigma)
-beta.hat.r <- eigensigma$vector[,1] # corresponds to beta-hat r
+eig.vect.1 <- eigensigma$vectors[,1]
+norm.eig.vect.1 <- eig.vect.1 / (sqrt())
+  
+beta.hat.r <- eigensigma$vector[,1]
 
 ## estimation of coefficients following the paper's notation ##
 xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
-gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
+gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,]
 gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
 gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
-alpha.hat <- sigma.uv %*% beta.hat.r #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
+alpha.hat <- sigma.uv %*% beta.hat.r 
 
 ### estimation of the VAR ###
 est.VAR <- matrix(0, k, t + 2*p)
@@ -75,11 +78,13 @@ for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
   Delta.Xt.min1.2[,i] <- est.VAR[,i-1] - est.VAR[,i-2]
   Delta.Xt.min2.2[,i+1] <- est.VAR[,i-1] - est.VAR[,i-2]
   Delta.Xt.min3.2[,i+2] <- est.VAR[,i-1] - est.VAR[,i-2]
-  est.VAR[, i] <- (alpha.hat %*% beta.hat.r + A.2)%*% est.VAR[, i-1] #+ gamma.hat.1%*%
-    #Delta.Xt.min1.2 + gamma.hat.2%*% Delta.Xt.min2.2 +
-    #gamma.hat.3%*% Delta.Xt.min3.2 
-  + alpha.hat + rnorm(k, 0, 1)
+  est.VAR[, i] <- (alpha.hat %*% beta.hat.r + A.2)%*% est.VAR[, i-1] + alpha.hat +
+      rnorm(k, 0, 1)+ gamma.hat.1 %*%
+    Delta.Xt.min1.2 #+ gamma.hat.2%*% Delta.Xt.min2.2 
+  #+ gamma.hat.3%*% Delta.Xt.min3.2 
+    #+ alpha.hat + rnorm(k, 0, 1)
 }
+ts.plot(t(est.VAR))
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
