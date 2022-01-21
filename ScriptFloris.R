@@ -6,7 +6,7 @@ library(urca)
 library(vars)
 
 # Generate sample
-t <- 100 # Number of time series observations
+t <- 50 # Number of time series observations
 n <- t + 2
 k <- 4 # Number of endogenous variables
 p <- 2 # Number of lags
@@ -19,43 +19,28 @@ A.2 <- diag(x = 1, k) # 4x4 identity matrix
 Bmat <- matrix(c(gamma, delta, 0, 0, delta, gamma, 0, 0, 0, 0, gamma, 0, 0, 0, 0, gamma), k) # Gamma matrix
 A <- A.1 + A.2 + Bmat
 
-## Create DeltaXt
+## Create Delta.Xt for OLS
 series <- matrix(0, k, t + 2*p) # Raw series with zeros
 Delta.Xt <- matrix(0, k, t + 2*p)
 Xt.min1 <- matrix(0, k, t + 2*p)
 Delta.Xt.min1 <- matrix(0, k, t + 2*p)
-Delta.Xt.min2 <- matrix(0, k, t + 2*p+1)
-Delta.Xt.min3 <- matrix(0, k, t + 2*p+2)
 for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
   series[, i] <- A%*%series[, i-1] - Bmat%*%series[, i-2] + rnorm(k, 0, 1)
   Delta.Xt[,i] <- series[,i] - series[,i-1]
   Xt.min1[,i] <- series[,i-1]
   Delta.Xt.min1[,i] <- series[,i-1] - series[,i-2]
-  Delta.Xt.min2[,i+1] <- series[,i-1] - series[,i-2]
-  Delta.Xt.min3[,i+2] <- series[,i-1] - series[,i-2]
 }
 series <- t(series)
 colnames(series) <- names
-Delta.Xt.min2 <- Delta.Xt.min2[,1:54]
-Delta.Xt.min3 <- Delta.Xt.min3[,1:54]
 Delta.Xt <- t(Delta.Xt)
 Xt.min1 <- t(Xt.min1)
 Delta.Xt.min1 <- t(Delta.Xt.min1)
-Delta.Xt.min2 <- t(Delta.Xt.min2)
-Delta.Xt.min3 <- t(Delta.Xt.min3)
 
-#ols <- function(Y,X.ols){ # OLS function ourselves #
-#  b<- solve(crossprod(X.ols), crossprod(X.ols,Y)) # coefficient estimates
-#  y.hat <- X.ols%*%b # fitted values
-#  out <- list(coef.estimates = b, fitted.values = y.hat)
-#  return(out)
-#}
-#ols(Delta.Xt[2:52,], Xt.min1[1:51,]- Delta.Xt[1:51,])
 
 ### OLS as step 1 in Hamilton
-ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1) #+ Delta.Xt.min2 + Delta.Xt.min3)
+ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1) 
 u <- ols.lm1$residuals
-ols.lm2 <- lm(Xt.min1~Delta.Xt.min1)#+Delta.Xt.min2+Delta.Xt.min3)
+ols.lm2 <- lm(Xt.min1~Delta.Xt.min1)
 v <- ols.lm2$residuals
 
 ### Step 2 in Hamilton
@@ -73,18 +58,15 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 
 ### Step 3 in Hamilton
 eigensigma <- eigen(Sigma)
-beta.hat.r0 <- t(cbind(0,0,0,0))
-beta.hat.r1 <- t(t(eigensigma$vector[,1])) 
+beta.hat.r0 <- t(cbind(0,0,0,0)) # rank of 0
+beta.hat.r1 <- rev(eigensigma$vector[,1]) # rank of 1
 tbeta.hat.r1 <- t(beta.hat.r1)
 
 ## estimation of coefficients following the paper's notation ##
-xi.hat.0 <- sigma.uv %*% beta.hat.r0 %*% t(beta.hat.r0) # alpha beta' of our paper
+zeta.hat.0 <- sigma.uv %*% beta.hat.r1 %*% t(beta.hat.r1) # alpha beta' of our paper
+gamma.hat.1 <- ols.lm1$coefficients[2:5,] - zeta.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - zeta.hat.0 * chi.1
+alpha.hat <- sigma.uv %*% beta.hat.r1 #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
 
-gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
-alpha.hat <- sigma.uv %*% beta.hat.r #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
-
-#gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
-#gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
@@ -125,8 +107,7 @@ print(paste("Chance to reject 0: ", ERF.0))
 print(paste("Chance to reject 1: ", ERF.1))
 
 
-############# Estimated VAR based on simul  ############# 
-
+############# Estimated VAR based on simulation  ############# 
 
 # Estimate VAR
 VARnew <- VAR(series, p = 2, type = "const")
@@ -141,12 +122,10 @@ recenter.resids <- cbind(res.VARnew[,1] - mean.res1, res.VARnew[,2] - mean.res2,
 
 # Test if we can resample from estimated serie 
 est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
-coef1 <- xi.hat.0 + gamma.hat.1 + A.2
+coef1 <- zeta.hat.0 + gamma.hat.1 + A.2
 J <- sample.int(n, size = n, replace = TRUE) # Draw J
 for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
-  est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1%*%est.VAR[,i-2]  + recenter.resids[J[i],] # formula 8 of paper
-    #(gamma.hat.2 - gamma.hat.1)%*%est.VAR[,i-2] + 
-    #(gamma.hat.3 - gamma.hat.2)%*%est.VAR[,i-3]  - gamma.hat.3%*%est.VAR[,i-4]  + alpha.hat + recenter.resids[J[i],]
+  est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
 }
 X.star <- t(est.VAR)
 ts.plot(X.star)
@@ -166,7 +145,7 @@ reject.bstar.0 <- rep(0, times = B)
 reject.bstar.1 <- rep(0, times = B)
 for (b in 1:B) {
     est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
-    coef1 <- xi.hat.0 + gamma.hat.1 + A.2
+    coef1 <- zeta.hat.0 + gamma.hat.1 + A.2
     J <- sample.int(n, size = n, replace = TRUE) # Draw J
     for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
       est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
@@ -225,36 +204,3 @@ ERF.0 <- mean(reject.star.0)
 ERF.1 <- mean(reject.star.1)
 print(paste("Rejection occurred in ", 100 *ERF.0, "% of the cases."))
 print(paste("Rejection occurred in ", 100 *ERF.1, "% of the cases."))  
-
-
-### NOTES ###
-
-# Check eigenvalues
-#eigen(A.1)
-#eigen(A.2)
-#eigen(A) # Unstable eigenvalues
-#eigen(B) # 1 eigenvalue is equal to 1
-
-
-# Generate series
-#series <- matrix(0, k, t + 2*p) # Raw series with zeros
-#for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
-#  series[, i] <- A%*%series[, i-1] - B%*%series[, i-2] + rnorm(k, 0, 1)
-#}
-#seriests <- ts(t(series[, -(1:p)])) # Convert to time series format
-#ts.plot(seriests)
-#transseries <- t(series)
-#names <- c("V1", "V2", "V3", "V4") # Rename variables
-#colnames(transseries) <- names
-
-#ca <- ca.jo(transseries, type = "trace", K = 2, ecdet = "none")
-#S <- summary(ca)
-#cv <- c(48.28, 31.52, 17.95, 8.18)
-#teststats <- rev(S@teststat)
-#for(i in 1:4){
-#  if(teststats[i]< cv[i]){
-#    return(c.rank <- i-1) 
-#  }
-#}
-
-
