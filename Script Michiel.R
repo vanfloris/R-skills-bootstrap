@@ -42,10 +42,10 @@ Delta.Xt.min1 <- t(Delta.Xt.min1)
 Delta.Xt.min2 <- t(Delta.Xt.min2)
 Delta.Xt.min3 <- t(Delta.Xt.min3)
 
-ols.lm1 <- lm(Delta.Xt~Xt.min1 + Delta.Xt.min1)
+ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1 + Delta.Xt.min2)
 u <- ols.lm1$residuals
-
-ols.lm2 <- lm(Xt.min1~Delta.Xt.min1+Delta.Xt.min2+Delta.Xt.min3)
+ 
+ols.lm2 <- lm(Xt.min1~ Delta.Xt.min1 + Delta.Xt.min2 + Delta.Xt.min3)
 v <- ols.lm2$residuals
 
 for(i in  1:length(u[,1])){
@@ -58,10 +58,15 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 
 ## Eigenvalues of the Sigma
 eigensigma <- eigen(Sigma)
-A.hat <- eigensigma$vector[,1]
+beta.hat.r <- eigensigma$vector[,1] # corresponds to beta-hat r
 
 ## What do we have to do with the eigenvalues to get the estimates?
-xi.0 <- sigma.uv %*% A.hat %*% t(A.hat)
+xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
+xi.hat.1 <- 
+xi.hat.2 <-
+xi.hat.3 <-
+alpha.hat <- 
+
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
