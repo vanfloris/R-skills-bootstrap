@@ -60,7 +60,7 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 eigensigma <- eigen(Sigma)
 beta.hat.r <- eigensigma$vector[,1] # corresponds to beta-hat r
 
-## What do we have to do with the eigenvalues to get the estimates?
+## estimation of coefficients ##
 xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
 gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
 gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
