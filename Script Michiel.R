@@ -106,7 +106,7 @@ print(paste("Chance to reject 0: ", ERF.0))
 print(paste("Chance to reject 1: ", ERF.1))
 
 
-############# Estimated VAR based on simul  ############# 
+############# Estimated VAR based on sim.  ############# 
 # lag selection
 lag <- VARselect(X, lag.max = 3)
 lag$selection
