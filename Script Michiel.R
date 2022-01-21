@@ -1,4 +1,4 @@
-####### Initialise the variables #######
+####### Initialize the variables #######
 # We look to simulate a VAR(2) with k = 4 equations
 rm(list=ls())
 set.seed(123) # Reset random number generator for reasons of reproducability
@@ -57,7 +57,9 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 
 ## Eigenvalues of the Sigma
 eigensigma <- eigen(Sigma)
-beta.hat.r <- eigensigma$vector[,1]
+eig.vect.1 <- as.vector(eigensigma$vectors[,1])
+scalar1 <- function(x) {x / sqrt(sum(x^2))}
+beta.hat.r <- scalar1(eig.vect.1)
 
 ## estimation of coefficients following the paper's notation ##
 xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
