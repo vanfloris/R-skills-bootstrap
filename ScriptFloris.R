@@ -52,19 +52,22 @@ Delta.Xt.min3 <- t(Delta.Xt.min3)
 
 ols.lm1 <- lm(Delta.Xt~Xt.min1 + Delta.Xt.min1)
 u <- ols.lm1$residuals
-
+tu <-t(u)
 ols.lm2 <- lm(Xt.min1~Delta.Xt.min1+Delta.Xt.min2+Delta.Xt.min3)
 v <- ols.lm2$residuals
 
-
-for(i in  1:length(u[,1])){
-  sigma.uu <- 1/length(u[,1]) * u[i,]%*%t(u[i,])
-  sigma.vv <- 1/length(v[,1]) * v[i,]%*%t(v[i,])
-  sigma.uv <- 1/length(v[,1]) * u[i,]%*%t(v[i,])
-  sigma.vu <- 1/length(v[,1]) * v[i,]%*%t(u[i,])
+sigma.uu <- matrix(0, 4, 4)
+for(i in  1:length(v[,1])){
+  sigma.uu <- sigma.uu + 1/length(v[,1])*(u[i,]%*%t(u[i,])) 
+  sigma.vv <- sigma.vv + 1/length(v[,1])*(v[i,]%*%t(v[i,]))
+  sigma.uv <- sigma.uv + 1/length(v[,1])*(u[i,]%*%t(v[i,]))
+  sigma.vu <- sigma.vu + 1/length(v[,1])*(v[i,]%*%t(u[i,]))
 }
-Sigma <- inv(sigma.vv)%*%sigma.vu%*%inv(sigma.uu)%*%sigma.uv
-
+Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
+eigensigma <- eigen(Sigma)
+A.hat <- eigensigma$vector[,1]
+  #cbind(eigensigma$vectors[,1],eigensigma$vectors[,2],eigensigma$vectors[,3],eigensigma$vectors[,4]) 
+xi.0 <- sigma.uv %*% A.hat %*% t(A.hat)
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
