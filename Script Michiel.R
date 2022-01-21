@@ -42,7 +42,7 @@ Delta.Xt.min1 <- t(Delta.Xt.min1)
 Delta.Xt.min2 <- t(Delta.Xt.min2)
 Delta.Xt.min3 <- t(Delta.Xt.min3)
 
-ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1 + Delta.Xt.min2)
+ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1 + Delta.Xt.min2 + Delta.Xt.min3)
 u <- ols.lm1$residuals
  
 ols.lm2 <- lm(Xt.min1~ Delta.Xt.min1 + Delta.Xt.min2 + Delta.Xt.min3)
@@ -62,11 +62,10 @@ beta.hat.r <- eigensigma$vector[,1] # corresponds to beta-hat r
 
 ## What do we have to do with the eigenvalues to get the estimates?
 xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
-xi.hat.1 <- 
-xi.hat.2 <-
-xi.hat.3 <-
-alpha.hat <- 
-
+gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
+gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
+gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
+alpha.hat <- ols.lm1$coefficients[1,] - xi.hat.0 %*% ols.lm2$coefficients[1,]
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
