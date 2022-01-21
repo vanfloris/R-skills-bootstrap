@@ -60,12 +60,12 @@ Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
 eigensigma <- eigen(Sigma)
 beta.hat.r <- eigensigma$vector[,1] # corresponds to beta-hat r
 
-## estimation of coefficients ##
+## estimation of coefficients following the paper's notation ##
 xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
 gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
 gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
 gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
-alpha.hat <- ols.lm1$coefficients[1,] - xi.hat.0 %*% ols.lm2$coefficients[1,]
+alpha.hat <- sigma.uv %*% beta.hat.r #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
