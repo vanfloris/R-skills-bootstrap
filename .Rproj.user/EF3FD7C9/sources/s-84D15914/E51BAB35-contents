@@ -7,7 +7,7 @@ library(vars)
 library(matlib)
 # Generate sample
 t <- 50 # Number of time series observations
-n <- t + 2
+n <- t + 2 
 k <- 4 # Number of endogenous variables
 p <- 2 # Number of lags
 
@@ -44,7 +44,6 @@ Delta.Xt.min3 <- t(Delta.Xt.min3)
 
 ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1 + Delta.Xt.min2 + Delta.Xt.min3)
 u <- ols.lm1$residuals
- 
 ols.lm2 <- lm(Xt.min1~ Delta.Xt.min1 + Delta.Xt.min2 + Delta.Xt.min3)
 v <- ols.lm2$residuals
 
@@ -66,6 +65,21 @@ gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:
 gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
 gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
 alpha.hat <- sigma.uv %*% beta.hat.r #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
+
+### estimation of the VAR ###
+est.VAR <- matrix(0, k, t + 2*p)
+Delta.Xt.min1.2 <- matrix(0, k, t + 2*p)
+Delta.Xt.min2.2 <- matrix(0, k, t + 2*p+1)
+Delta.Xt.min3.2 <- matrix(0, k, t + 2*p+2)# Raw series with zeros
+for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
+  Delta.Xt.min1.2[,i] <- est.VAR[,i-1] - est.VAR[,i-2]
+  Delta.Xt.min2.2[,i+1] <- est.VAR[,i-1] - est.VAR[,i-2]
+  Delta.Xt.min3.2[,i+2] <- est.VAR[,i-1] - est.VAR[,i-2]
+  est.VAR[, i] <- (alpha.hat %*% beta.hat.r + A.2)%*% est.VAR[, i-1] #+ gamma.hat.1%*%
+    #Delta.Xt.min1.2 + gamma.hat.2%*% Delta.Xt.min2.2 +
+    #gamma.hat.3%*% Delta.Xt.min3.2 
+  + alpha.hat + rnorm(k, 0, 1)
+}
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
@@ -166,7 +180,6 @@ for (b in 1:B) {
 
 cv.star1 <- quantile(Q.star1[,1], probs=0.95) ## Crit value for r = 0
 cv.star2 <- quantile(Q.star1[,2], probs=0.95) ## Crit value for r = 1
-
 
 ######### Putting everything together #########
 nr.sim <- 100; B <- 199;
