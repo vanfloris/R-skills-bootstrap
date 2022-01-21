@@ -24,23 +24,23 @@ series <- matrix(0, k, t + 2*p) # Raw series with zeros
 Delta.Xt <- matrix(0, k, t + 2*p)
 Xt.min1 <- matrix(0, k, t + 2*p)
 Delta.Xt.min1 <- matrix(0, k, t + 2*p)
-Delta.Xt.min2 <- matrix(0, k, t + 2*p+1)
-Delta.Xt.min3 <- matrix(0, k, t + 2*p+2)
+# Delta.Xt.min2 <- matrix(0, k, t + 2*p+1)
+# Delta.Xt.min3 <- matrix(0, k, t + 2*p+2)
 for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
   series[, i] <- A%*%series[, i-1] - Bmat%*%series[, i-2] + rnorm(k, 0, 1)
   Delta.Xt[,i] <- series[,i] - series[,i-1]
   Xt.min1[,i] <- series[,i-1]
   Delta.Xt.min1[,i] <- series[,i-1] - series[,i-2]
-  Delta.Xt.min2[,i+1] <- series[,i-1] - series[,i-2]
-  Delta.Xt.min3[,i+2] <- series[,i-1] - series[,i-2]
+  # Delta.Xt.min2[,i+1] <- series[,i-1] - series[,i-2]
+  # Delta.Xt.min3[,i+2] <- series[,i-1] - series[,i-2]
 }
-Delta.Xt.min2 <- Delta.Xt.min2[,1:54]
-Delta.Xt.min3 <- Delta.Xt.min3[,1:54]
+# Delta.Xt.min2 <- Delta.Xt.min2[,1:54]
+# Delta.Xt.min3 <- Delta.Xt.min3[,1:54]
 Delta.Xt <- t(Delta.Xt)
 Xt.min1 <- t(Xt.min1)
 Delta.Xt.min1 <- t(Delta.Xt.min1)
-Delta.Xt.min2 <- t(Delta.Xt.min2)
-Delta.Xt.min3 <- t(Delta.Xt.min3)
+# Delta.Xt.min2 <- t(Delta.Xt.min2)
+# Delta.Xt.min3 <- t(Delta.Xt.min3)
 
 #ols <- function(Y,X.ols){ # OLS function ourselves #
 #  b<- solve(crossprod(X.ols), crossprod(X.ols,Y)) # coefficient estimates
@@ -50,13 +50,16 @@ Delta.Xt.min3 <- t(Delta.Xt.min3)
 #}
 #ols(Delta.Xt[2:52,], Xt.min1[1:51,]- Delta.Xt[1:51,])
 
-ols.lm1 <- lm(Delta.Xt~Xt.min1 + Delta.Xt.min1)
+ols.lm1 <- lm(Delta.Xt~ Delta.Xt.min1) # + Delta.Xt.min2 + Delta.Xt.min3)
 u <- ols.lm1$residuals
-tu <-t(u)
-ols.lm2 <- lm(Xt.min1~Delta.Xt.min1+Delta.Xt.min2+Delta.Xt.min3)
+
+ols.lm2 <- lm(Xt.min1~ Delta.Xt.min1) # + Delta.Xt.min2 + Delta.Xt.min3)
 v <- ols.lm2$residuals
 
-sigma.uu <- matrix(0, 4, 4); sigma.uv <- matrix(0, 4, 4); sigma.vu <- matrix(0, 4, 4); sigma.vv <- matrix(0, 4, 4)
+sigma.uu <- matrix(0,4,4)
+sigma.uv <- matrix(0,4,4)
+sigma.vu <- matrix(0,4,4)
+sigma.vv <- matrix(0,4,4)
 
 for(i in  1:length(v[,1])){
   sigma.uu <- sigma.uu + 1/length(v[,1])*(u[i,]%*%t(u[i,])) 
@@ -65,10 +68,32 @@ for(i in  1:length(v[,1])){
   sigma.vu <- sigma.vu + 1/length(v[,1])*(v[i,]%*%t(u[i,]))
 }
 Sigma <- solve(sigma.vv)%*%sigma.vu%*%solve(sigma.uu)%*%sigma.uv
+
+## Eigenvalues of the Sigma
 eigensigma <- eigen(Sigma)
-A.hat <- eigensigma$vector[,1]
-#cbind(eigensigma$vectors[,1],eigensigma$vectors[,2],eigensigma$vectors[,3],eigensigma$vectors[,4]) 
-xi.0 <- sigma.uv %*% A.hat %*% t(A.hat)
+
+## estimation of coefficients using Hamilton
+A.hat <- eigensigma$vector[,1] # corresponds to beta-hat r (taking r = 1)
+zeta.hat.0 <- sigma.uv %*% A.hat %*% t(A.hat)
+zeta.hat.1 <- ols.lm1$coefficients[2:5,] - zeta.hat.0 %*% ols.lm2$coefficients[2:5,]
+alpha.hat <- ols.lm1$coefficients[1,] - zeta.hat.0 %*% ols.lm2$coefficients[1,]
+
+## estimation of coefficients using the Paper
+
+beta.hat.r <- eigensigma$vectors[1,]
+
+ols.lm3 <- lm(Delta.Xt~ Delta.Xt.min1 + beta.hat.r %*% t(Xt.min1))
+
+
+
+## estimation of coefficients following the paper's notation ##
+
+
+xi.hat.0 <- sigma.uv %*% beta.hat.r %*% t(beta.hat.r)
+gamma.hat.1 <- ols.lm1$coefficients[2:5,] - xi.hat.0 %*% ols.lm2$coefficients[2:5,] # pi.1 - xi.hat.0 * chi.1
+# gamma.hat.2 <- ols.lm1$coefficients[6:9,] - xi.hat.0 %*% ols.lm2$coefficients[6:9,]
+# gamma.hat.3 <- ols.lm1$coefficients[10:13,] - xi.hat.0 %*% ols.lm2$coefficients[10:13,]
+alpha.hat <- sigma.uv %*% beta.hat.r #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
 
 ###### Monte Carlo Simulation ######
 # Number of simulations
@@ -81,11 +106,11 @@ Q <- matrix(data = NA,nrow= nr.sim, ncol = 4)
 for (j in 1:nr.sim){
   ## Step 1: Simulate ##
   # Generate sample from VAR
-  series <- matrix(0, k, t + 2*p) # Raw series with zeros
+  series2 <- matrix(0, k, t + 2*p) # Raw series with zeros
   for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
-    series[, i] <- A%*%series[, i-1] - Bmat%*%series[, i-2] + rnorm(k, 0, 1)
+    series2[, i] <- A%*%series2[, i-1] - Bmat%*%series2[, i-2] + rnorm(k, 0, 1)
   }
-  X <- t(series)
+  X <- t(series2)
   colnames(X) <- names
   
   ##Step 2: Apply Trace test ##
@@ -123,6 +148,9 @@ lag$selection
 #}
 #ols(X[3:53,], X[2:52,]- X[1:51,])
 
+
+
+
 # Estimate VAR
 VARnew <- VAR(X, p = 2, type = "const")
 res.VARnew <- residuals(VARnew)
@@ -142,7 +170,7 @@ lag2coef <- rbind(t(as.matrix(sum$varresult$V1$coefficients[5:8,1])),t(as.matrix
 const <- rbind((as.matrix(sum$varresult$V1$coefficients[9,1])),(as.matrix(sum$varresult$V2$coefficients[9,1])),
                (as.matrix(sum$varresult$V3$coefficients[9,1])), (as.matrix(sum$varresult$V1$coefficients[9,1])))
 
-# Test if we can resample from estimated series 
+# Test if we can resample from estimated serie 
 estseries <- matrix(0, k, t + 2*p) # Raw series with zeros
 J <- sample.int(n, size = n, replace = TRUE) # Draw J
 for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
@@ -150,6 +178,22 @@ for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
 }
 X.star <- t(estseries)
 ts.plot(X.star)
+
+
+
+
+
+
+est.VAR <- matrix(0, k, t + 2*p) # Estimate VAR from our coefficient estimates
+for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
+  est.VAR[, i] <- (A.2 + zeta.hat.0 + zeta.hat.1) %*% est.VAR[, i-1] 
+    - zeta.hat.1%*%est.VAR[, i-2] + alpha.hat + rnorm(k, 0, 1)
+}
+
+test.VAR <- t(est.VAR)
+
+ts.plot(test.VAR)
+
 
 ##################### THE BOOTSTRAP IN R #####################
 # First draw indices of the bootstrap sample: draw n times with replacement
