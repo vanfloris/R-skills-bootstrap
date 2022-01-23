@@ -11,6 +11,14 @@ n <- t + 2
 k <- 4 # Number of endogenous variables
 p <- 2 # Number of lags
 
+# Generate coefficient matrices
+a <- -0.4 ; gamma <- 0.8 ; alpha <- t(t(c(a,0,0,0))); beta <- t(t(c(1,0,0,0)))
+delta <- 0; # 0 , 0.1 , 0.2 , 0.3. 
+A.1 <- alpha %*% t(beta) # Alpha matrix
+A.2 <- diag(x = 1, k) # 4x4 identity matrix
+Bmat <- matrix(c(gamma, delta, 0, 0, delta, gamma, 0, 0, 0, 0, gamma, 0, 0, 0, 0, gamma), k) # Gamma matrix
+A <- A.1 + A.2 + Bmat
+
 ###### Monte Carlo Simulation to get Q_0,T and Q_1,T ######
 # Number of simulations
 nr.sim <- 10000
@@ -40,15 +48,16 @@ for (j in 1:nr.sim){
   if (teststats[2] > 31.52) {reject.1[j] <- 1}
 }
 
-### Create all necessary things for the bootstrap ###
-# Generate coefficient matrices
-a <- -0.4 ; gamma <- 0.8 ; alpha <- t(t(c(a,0,0,0))); beta <- t(t(c(1,0,0,0)))
-delta <- 0; # 0 , 0.1 , 0.2 , 0.3. 
-A.1 <- alpha %*% t(beta) # Alpha matrix
-A.2 <- diag(x = 1, k) # 4x4 identity matrix
-Bmat <- matrix(c(gamma, delta, 0, 0, delta, gamma, 0, 0, 0, 0, gamma, 0, 0, 0, 0, gamma), k) # Gamma matrix
-A <- A.1 + A.2 + Bmat
+## Step 4: Summarize ##
+# Empirical rejection frequency of rank = 0
+ERF.0 <- mean(reject.0)
+# Empirical rejection frequency of rank = 1
+ERF.1 <- mean(reject.1)
+# give the output on the screen
+print(paste("Chance to reject 0: ", ERF.0))
+print(paste("Chance to reject 1: ", ERF.1))
 
+### Create all necessary things for the bootstrap ###
 ## Create Delta.Xt for OLS
 series <- matrix(0, k, t + 2*p) # Raw series with zeros
 Delta.Xt <- matrix(0, k, t + 2*p)
@@ -103,7 +112,7 @@ tbeta.hat.r1 <- t(beta.hat.r1)
 ## estimation of coefficients following the paper's notation for r = 0 ##
 zeta.hat.0.r0 <- sigma.uv %*% beta.hat.r0 %*% t(beta.hat.r0) # alpha beta' of our paper
 gamma.hat.1.r0 <- ols.lm1$coefficients[2:5,] - zeta.hat.0.r0 %*% ols.lm2$coefficients[2:5,] # pi.1 - zeta.hat.0 * chi.1
-alpha.hat.r0 <- sigma.uv %*% nbeta.hat.r0 #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
+alpha.hat.r0 <- sigma.uv %*% beta.hat.r0 #alpha-hat as Sigma.UV A.hat (as zeta_0 in Ham corresponds to alpha beta' in the paper)
 
 ## estimation of coefficients following the paper's notation for r = 1 ##
 zeta.hat.0.r1 <- sigma.uv %*% norm.vec %*% t(norm.vec) # alpha beta' of our paper
