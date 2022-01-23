@@ -11,7 +11,7 @@ n <- t + 2
 k <- 4 # Number of endogenous variables
 p <- 2 # Number of lags
 
-# Generate coefficient matrices
+# Generate coefficient matrices 
 a <- -0.4 ; gamma <- 0.8 ; alpha <- t(t(c(a,0,0,0))); beta <- t(t(c(1,0,0,0)))
 delta <- 0; # 0 , 0.1 , 0.2 , 0.3. 
 A.1 <- alpha %*% t(beta) # Alpha matrix
@@ -57,7 +57,7 @@ ERF.1 <- mean(reject.1)
 print(paste("Chance to reject 0: ", ERF.0))
 print(paste("Chance to reject 1: ", ERF.1))
 
-### Create all necessary things for the bootstrap ###
+### Create all necessary things for the bootstrap by following step 1,2 and 3 of chapter 20.2 from Hamilton ###
 ## Create Delta.Xt for OLS
 series <- matrix(0, k, t + 2*p) # Raw series with zeros
 Delta.Xt <- matrix(0, k, t + 2*p)
@@ -130,51 +130,13 @@ mean.res1 <- mean(res.VARnew[,1]); mean.res2 <- mean(res.VARnew[,2]); mean.res3 
 # re-centered residuals
 recenter.resids <- cbind(res.VARnew[,1] - mean.res1, res.VARnew[,2] - mean.res2, res.VARnew[,3] - mean.res3, res.VARnew[,4] - mean.res4) 
 
-######### Bootstrap r = 0, to get Q.star_0,T#########
-nr.sim <- 1000; B <- 199;
+######### Bootstrap r = 0 and r =1 , to get Q.star_0,T and Q.star_1,T #########
+nr.sim <- 500; B <- 99;
 n <- t + 2;
 reject.star.0 <- rep(0, times = nr.sim)
-names <- c("V1", "V2", "V3", "V4") # Rename variables
-Q.star0 <- matrix(data = NA,nrow= B, ncol = 4) 
-for (j in 1:nr.sim){
-  ## Step 1: Simulate ##
-  series <- matrix(0, k, t + 2*p) # Raw series with zeros
-  for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
-    series[, i] <- A%*%series[, i-1] - Bmat%*%series[, i-2] + rnorm(k, 0, 1)
-  }
-  X <- t(series)
-  colnames(X) <- names
-  ## Step 2: Apply ##
-  ca <- ca.jo(X, type = "trace", K = 2, ecdet = "none")
-  S <- summary(ca)
-  teststats <- rev(S@teststat)
-  for (b in 1:B) {
-    est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
-    coef0 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
-    J <- sample.int(n, size = n, replace = TRUE) # Draw J
-    for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
-      est.VAR[, i] <- coef0%*%est.VAR[, i-1] - gamma.hat.1.r0%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
-    }
-    X.star <- t(est.VAR)
-    colnames(X.star) <- names
-    ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
-    S.star <- summary(ca.star)
-    teststats.star <- rev(S.star@teststat) #stored as teststat
-    Q.star0[b,] <- teststats.star
-  }
-  cv.star1 <- quantile(Q.star0[,1], probs=0.95)
-  if (teststats[1] > cv.star1) {reject.star.0[j] <- 1}
-}
-
-## Step 4: Summarize ##
-ERF.0.r0 <- mean(reject.star.0)
-print(paste("Rejection occurred in ", 100 *ERF.0.r0, "% of the cases.")) 
-
-######### Bootstrap r = 1, to get Q.star_1,T #########
-nr.sim <- 1000; B <- 199;
-n <- t + 2;
 reject.star.1 <- rep(0, times = nr.sim)
 names <- c("V1", "V2", "V3", "V4") # Rename variables
+Q.star0 <- matrix(data = NA,nrow= B, ncol = 4) 
 Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
 for (j in 1:nr.sim){
   ## Step 1: Simulate ##
@@ -189,23 +151,35 @@ for (j in 1:nr.sim){
   S <- summary(ca)
   teststats <- rev(S@teststat)
   for (b in 1:B) {
-    est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
+    est.VAR0 <- matrix(0, k, t + 2*p) # Raw series with zeros 
+    est.VAR1 <- matrix(0, k, t + 2*p) # Raw series with zeros
+    coef0 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
     coef1 <- zeta.hat.0.r1 + gamma.hat.1.r1 + A.2
     J <- sample.int(n, size = n, replace = TRUE) # Draw J
     for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
-      est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1.r1%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
+      est.VAR0[, i] <- coef0%*%est.VAR0[, i-1] - gamma.hat.1.r0%*%est.VAR0[,i-2] + recenter.resids[J[i],] # formula 8 of paper for r=0
+      est.VAR1[, i] <- coef1%*%est.VAR1[, i-1] - gamma.hat.1.r1%*%est.VAR1[,i-2] + recenter.resids[J[i],] # Series for r=1
     }
-    X.star <- t(est.VAR)
-    colnames(X.star) <- names
-    ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
-    S.star <- summary(ca.star)
-    teststats.star <- rev(S.star@teststat) #stored as teststat
-    Q.star1[b,] <- teststats.star
+    # test stats for r=0
+    X.star0 <- t(est.VAR0)
+    colnames(X.star0) <- names
+    ca.star0 <- ca.jo(X.star0, type = "trace", K = 2, ecdet = "const")
+    S.star0 <- summary(ca.star0)
+    teststats.star0 <- rev(S.star0@teststat) #stored as teststat
+    Q.star0[b,] <- teststats.star0
+    # test stats for r=1
+    X.star1 <- t(est.VAR1)
+    colnames(X.star1) <- names
+    ca.star1 <- ca.jo(X.star1, type = "trace", K = 2, ecdet = "const")
+    S.star1 <- summary(ca.star1)
+    teststats.star1 <- rev(S.star1@teststat) #stored as teststat
+    Q.star1[b,] <- teststats.star1
   }
-  cv.star2 <- quantile(Q.star1[,2], probs=0.95)
+  cv.star1 <- quantile(Q.star0[,1], probs=0.95) # critical value for r = 0
+  if (teststats[1] > cv.star1) {reject.star.0[j] <- 1}
+  cv.star2 <- quantile(Q.star1[,2], probs=0.95) # critical value for r = 1
   if (teststats[2] > cv.star2) {reject.star.1[j] <- 1}
 }
-
 ## Step 4: Summarize ##
 ERF.0.r0 <- mean(reject.star.0)
 ERF.1.r1 <- mean(reject.star.1)
