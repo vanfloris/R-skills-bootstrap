@@ -44,7 +44,7 @@ for (j in 1:nr.sim){
   Q[j,] <- teststats
   ## Step 3: Evaluate ##
   # Check if null hypothesis is rejected
-  if (teststats[1] > 48.28) {reject.0[j] <- 1}
+  if (teststats[1] > 71.1) {reject.0[j] <- 1}
   if (teststats[2] > 31.52) {reject.1[j] <- 1}
 }
 
@@ -130,13 +130,34 @@ mean.res1 <- mean(res.VARnew[,1]); mean.res2 <- mean(res.VARnew[,2]); mean.res3 
 # re-centered residuals
 recenter.resids <- cbind(res.VARnew[,1] - mean.res1, res.VARnew[,2] - mean.res2, res.VARnew[,3] - mean.res3, res.VARnew[,4] - mean.res4) 
 
+B = 99
+Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
+reject.bstar.0 <- rep(0, times = B)
+reject.bstar.1 <- rep(0, times = B)
+for (b in 1:B) {
+  est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
+  coef1 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
+  J <- sample.int(n, size = n, replace = TRUE) # Draw J
+  for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
+    est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1.r0%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
+  }
+  X.star <- t(est.VAR)
+  colnames(X.star) <- names
+  ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
+  S.star <- summary(ca.star)
+  teststats.star <- rev(S.star@teststat) #stored as teststat
+  Q.star1[b,] <- teststats.star
+}
+cv.star1 <- quantile(Q.star1[,1], probs=0.95) ## Crit value for r = 0
+cv.star1
+
 ######### Bootstrap r = 0, to get Q.star_0,T#########
-nr.sim <- 100; B <- 199;
+nr.sim <- 500; B <- 99;
 n <- t + 2;
 reject.star.0 <- rep(0, times = nr.sim)
 names <- c("V1", "V2", "V3", "V4") # Rename variables
-Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
-for (i in 1:nr.sim){
+Q.star0 <- matrix(data = NA,nrow= B, ncol = 4) 
+for (j in 1:nr.sim){
   ## Step 1: Simulate ##
   series <- matrix(0, k, t + 2*p) # Raw series with zeros
   for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
@@ -150,20 +171,20 @@ for (i in 1:nr.sim){
   teststats <- rev(S@teststat)
   for (b in 1:B) {
     est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
-    coef1 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
+    coef0 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
     J <- sample.int(n, size = n, replace = TRUE) # Draw J
     for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
-      est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1.r0%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
+      est.VAR[, i] <- coef0%*%est.VAR[, i-1] - gamma.hat.1.r0%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
     }
     X.star <- t(est.VAR)
     colnames(X.star) <- names
     ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
     S.star <- summary(ca.star)
     teststats.star <- rev(S.star@teststat) #stored as teststat
-    Q.star1[b,] <- teststats.star
+    Q.star0[b,] <- teststats.star
   }
-  cv.star1 <- quantile(Q.star1[,2], probs=0.95)
-  if (teststats[1] > cv.star1) {reject.star.0[b] <- 1}
+  cv.star1 <- quantile(Q.star0[,1], probs=0.95)
+  if (teststats[1] > cv.star1) {reject.star.0[j] <- 1}
 }
 
 ## Step 4: Summarize ##
@@ -171,12 +192,12 @@ ERF.0 <- mean(reject.star.0)
 print(paste("Rejection occurred in ", 100 *ERF.0, "% of the cases.")) 
 
 ######### Bootstrap r = 1, to get Q.star_1,T #########
-nr.sim <- 100; B <- 199;
+nr.sim <- 500; B <- 99;
 n <- t + 2;
 reject.star.1 <- rep(0, times = nr.sim)
 names <- c("V1", "V2", "V3", "V4") # Rename variables
 Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
-for (i in 1:nr.sim){
+for (j in 1:nr.sim){
   ## Step 1: Simulate ##
   series <- matrix(0, k, t + 2*p) # Raw series with zeros
   for (i in (p + 1):(t + 2*p)){ # Generate series with e ~ N(0,1)
@@ -202,10 +223,11 @@ for (i in 1:nr.sim){
     teststats.star <- rev(S.star@teststat) #stored as teststat
     Q.star1[b,] <- teststats.star
   }
-  cv.star2 <- quantile(Q.star1[,3], probs=0.95)
-  if (teststats[2] > cv.star2) {reject.star.1[b] <- 1}
+  cv.star2 <- quantile(Q.star1[,2], probs=0.95)
+  if (teststats[2] > cv.star2) {reject.star.1[j] <- 1}
 }
 
 ## Step 4: Summarize ##
 ERF.1 <- mean(reject.star.1)
 print(paste("Rejection occurred in ", 100 *ERF.1, "% of the cases.")) 
+
