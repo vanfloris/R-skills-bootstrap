@@ -152,7 +152,7 @@ cv.star1 <- quantile(Q.star1[,1], probs=0.95) ## Crit value for r = 0
 cv.star1
 
 ######### Bootstrap r = 0, to get Q.star_0,T#########
-nr.sim <- 500; B <- 99;
+nr.sim <- 1000; B <- 199;
 n <- t + 2;
 reject.star.0 <- rep(0, times = nr.sim)
 names <- c("V1", "V2", "V3", "V4") # Rename variables
@@ -192,7 +192,7 @@ ERF.0 <- mean(reject.star.0)
 print(paste("Rejection occurred in ", 100 *ERF.0, "% of the cases.")) 
 
 ######### Bootstrap r = 1, to get Q.star_1,T #########
-nr.sim <- 500; B <- 99;
+nr.sim <- 1000; B <- 199;
 n <- t + 2;
 reject.star.1 <- rep(0, times = nr.sim)
 names <- c("V1", "V2", "V3", "V4") # Rename variables
