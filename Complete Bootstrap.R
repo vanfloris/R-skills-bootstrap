@@ -130,27 +130,6 @@ mean.res1 <- mean(res.VARnew[,1]); mean.res2 <- mean(res.VARnew[,2]); mean.res3 
 # re-centered residuals
 recenter.resids <- cbind(res.VARnew[,1] - mean.res1, res.VARnew[,2] - mean.res2, res.VARnew[,3] - mean.res3, res.VARnew[,4] - mean.res4) 
 
-B = 99
-Q.star1 <- matrix(data = NA,nrow= B, ncol = 4) 
-reject.bstar.0 <- rep(0, times = B)
-reject.bstar.1 <- rep(0, times = B)
-for (b in 1:B) {
-  est.VAR <- matrix(0, k, t + 2*p) # Raw series with zeros
-  coef1 <- zeta.hat.0.r0 + gamma.hat.1.r0 + A.2
-  J <- sample.int(n, size = n, replace = TRUE) # Draw J
-  for (i in (p + 2):(t + 2*p)){ # Generate estimated series with recentered residuals
-    est.VAR[, i] <- coef1%*%est.VAR[, i-1] - gamma.hat.1.r0%*%est.VAR[,i-2] + recenter.resids[J[i],] # formula 8 of paper
-  }
-  X.star <- t(est.VAR)
-  colnames(X.star) <- names
-  ca.star <- ca.jo(X.star, type = "trace", K = 2, ecdet = "const")
-  S.star <- summary(ca.star)
-  teststats.star <- rev(S.star@teststat) #stored as teststat
-  Q.star1[b,] <- teststats.star
-}
-cv.star1 <- quantile(Q.star1[,1], probs=0.95) ## Crit value for r = 0
-cv.star1
-
 ######### Bootstrap r = 0, to get Q.star_0,T#########
 nr.sim <- 1000; B <- 199;
 n <- t + 2;
@@ -188,8 +167,8 @@ for (j in 1:nr.sim){
 }
 
 ## Step 4: Summarize ##
-ERF.0 <- mean(reject.star.0)
-print(paste("Rejection occurred in ", 100 *ERF.0, "% of the cases.")) 
+ERF.0.r0 <- mean(reject.star.0)
+print(paste("Rejection occurred in ", 100 *ERF.0.r0, "% of the cases.")) 
 
 ######### Bootstrap r = 1, to get Q.star_1,T #########
 nr.sim <- 1000; B <- 199;
@@ -228,6 +207,7 @@ for (j in 1:nr.sim){
 }
 
 ## Step 4: Summarize ##
-ERF.1 <- mean(reject.star.1)
-print(paste("Rejection occurred in ", 100 *ERF.1, "% of the cases.")) 
-
+ERF.0.r0 <- mean(reject.star.0)
+ERF.1.r1 <- mean(reject.star.1)
+print(paste("Rejection occurred in ", 100 *ERF.0.r0, "% of the cases.")) 
+print(paste("Rejection occurred in ", 100 *ERF.1.r1, "% of the cases.")) 
