@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1642938919267.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CC279ED7",
+    "lastKnownWriteTime" : 1642946019,
+    "last_content_update" : 1642946019340,
+    "path" : "~/Documents/GitHub/R-skills-bootstrap/Complete Bootstrap.R",
+    "project_path" : "Complete Bootstrap.R",
+    "properties" : {
+        "cursorPosition" : "149,1",
+        "scrollLine" : "134",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1642936749139.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B3135168",
+    "lastKnownWriteTime" : 1642936702,
+    "last_content_update" : 1642938805017,
+    "path" : "~/Documents/GitHub/R-skills-bootstrap/ScriptIvan.R",
+    "project_path" : "ScriptIvan.R",
+    "properties" : {
+        "cursorPosition" : "59,0",
+        "scrollLine" : "50"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
