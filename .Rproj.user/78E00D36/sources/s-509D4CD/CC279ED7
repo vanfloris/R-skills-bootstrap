@@ -7,8 +7,13 @@
     "folds" : "",
     "hash" : "0",
     "id" : "CC279ED7",
+<<<<<<< Updated upstream
     "lastKnownWriteTime" : 1642949851,
     "last_content_update" : 1642949851,
+=======
+    "lastKnownWriteTime" : 1642949833,
+    "last_content_update" : 1642949833,
+>>>>>>> Stashed changes
     "path" : "~/Documents/GitHub/R-skills-bootstrap/Complete Bootstrap.R",
     "project_path" : "Complete Bootstrap.R",
     "properties" : {
